@@ -4,128 +4,275 @@
  * @flow
  */
  import React, { Component } from 'react';
- import { Image , StyleSheet, Text,Linking,View } from 'react-native';
- import { TabNavigator } from "react-navigation";
- import { Container, Header, Content, Card, CardItem, Thumbnail, Input, Item, Title, Button, Icon, Left, Body, Right, H1, H2, H3 } from 'native-base';
+ import { ActivityIndicator, AsyncStorage, Image, ListView, ImageBackground, FlatList, RefreshControl, StyleSheet, TextInput, View, TouchableHighlight,Linking } from 'react-native';
+ import { TabNavigator, StackNavigator } from "react-navigation";
+ import { Container, Header, Content, Card, CardItem, Thumbnail, List, ListItem, Icon, Item, Input, Tab, Tabs, Text, Title, Button, Left, Body, Right, H1, H2, H3, } from 'native-base';
+ import * as firebase from 'firebase';
+ import firebaseApp from '../App';
+ import rootRef from '../App';
+
 
  export default class Home extends Component {
+  constructor(props) {
+     super(props);
+     this.state = {
+       isLoading: true,
+       refreshing: false,
+     }
+   }
+
+   async componentDidMount() {
+     this.setState({
+      firstName: await AsyncStorage.getItem('firstName'),
+      lastName: await AsyncStorage.getItem('lastName'),
+      userPhoto: await AsyncStorage.getItem('userPhoto'),
+    });
+    return fetch('https://jonssonconnect.firebaseio.com/.json')
+      .then((response) => response.json())
+      .then((responseJson) => {
+        let ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+        this.setState({
+          isLoading: false,
+          dataSource: ds.cloneWithRows(responseJson.Articles),
+        }, function() {
+          });
+      })
+      .catch((error) => {
+        this.setState({
+            isLoading: false,
+            networkFailed: true,
+          })
+      });
+  }
+
    static navigationOptions = {
      tabBarLabel: 'Home',
-
-
      tabBarIcon: ({ tintcolor }) => (
        <Image
-        source={require('../images/homeicon.png')}
-        style={{width: 22, height: 22}}>
+        source={require('../images/temocicon.png')}
+        style={{width: 32, height: 32}}>
        </Image>
      )
    }
+
    render() {
+      if (this.state.isLoading) {
+        return (
+          <View style={{flex: 1, paddingTop: 20}}>
+            <ActivityIndicator />
+          </View>
+        );
+      }
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ]
+
+      const date = new Date()
+      var month = monthNames[date.getMonth()]
+      var year = date.getFullYear()
+      var day = date.getDate()
+
+
      return (
-       <Container>
-       <Header searchBar style={styles.searchbarColor}>
-       <Thumbnail style={{width: 30, height: 30, margin: 10}} small source={{uri: 'https://joashpereira.com/templates/material_one_pager/img/avatar1.png'}} />
-          <Item><Input placeholder="Search" /></Item>
-          <Button transparent>
-            <Text style={styles.searchButton}>Search</Text>
-          </Button>
-        </Header>
-        <Content>
-           <Card>
-             <CardItem>
-               <Left>
-                 <Thumbnail source={{uri: 'https://joashpereira.com/templates/material_one_pager/img/avatar1.png'}} />
-                 <Body>
-                   <Text>John Doe</Text>
-                   <Text note>CTO at Microsoft</Text>
-                 </Body>
-               </Left>
-             </CardItem>
-             <CardItem cardBody>
-               <Image source={{uri: 'https://static1.squarespace.com/static/53f9e1c8e4b0586eb80c75e8/t/57e932d09f7456dca3d81828/1474900711585/MIT-Tech-Review.gif'}} style={{height: 200, width: null, flex: 1}}/>
-             </CardItem>
-             <CardItem>
-               <Right>
-                 <Button transparent>
-                   <Text>Read Article</Text>
-                 </Button>
-               </Right>
-             </CardItem>
-           </Card>
-           <Card>
-             <CardItem>
-               <Left>
-                 <Thumbnail source={{uri: 'https://joashpereira.com/templates/material_one_pager/img/avatar1.png'}} />
-                 <Body>
-                   <Text>NativeBase</Text>
-                   <Text note>GeekyAnts</Text>
-                 </Body>
-               </Left>
-             </CardItem>
-             <CardItem cardBody>
-              <Text>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-              dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-              proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </Text>
-             </CardItem>
-           </Card>
-           <Card>
-             <CardItem>
-               <Left>
-                 <Thumbnail source={{uri: 'https://joashpereira.com/templates/material_one_pager/img/avatar1.png'}} />
-                 <Body>
-                   <Text>NativeBase</Text>
-                   <Text note>GeekyAnts</Text>
-                 </Body>
-               </Left>
-             </CardItem>
-             <CardItem cardBody>
-               <Image source={{uri: 'https://static1.squarespace.com/static/5314da90e4b0e36de29a1b94/546d594fe4b02458d33b5ffa/546d5967e4b090b7b5f449f2/1416452457063/mit4.jpg?format=1000w'}} style={{height: 200, width: null, flex: 1}}/>
-             </CardItem>
-             <CardItem>
-               <Right>
-                 <Button transparent>
-                   <Text>Read Article</Text>
-                 </Button>
-               </Right>
-             </CardItem>
-           </Card>
-          <Card>
-          <CardItem>
+       <Container style={styles.containerStyle}>
+       <Content>
+         <View style={styles.container2}>
+           <ImageBackground
+             style={styles.backdrop}
+             blurRadius={0}
+             source={{uri: 'https://images.unsplash.com/photo-1502679726485-931beda67f88?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=de463bf685e4e3df80b0957fd4a2fa1c&auto=format&fit=crop&w=2255&q=80'}}>
+               <View style={styles.backdropView}>
+               <Thumbnail style={{ paddingTop: 30 }} source={{uri: this.state.userPhoto.toString() }} />
+                 <Text style={{ color: '#FFFFFF', fontSize: 20, fontWeight: '300', paddingBottom: 5, paddingTop: 5}}>Hello, {this.state.firstName.toString()}.</Text>
+                 <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '100', paddingBottom: 5}}>Search the news for today,</Text>
+                 <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '800', paddingBottom: 15}}>{month} {day}, {year}</Text>
 
-              <Body>
-              <Text style=
-              <Button onPress={ ()=>{ Linking.openURL('https://giving.utdallas.edu/')}}>
-              <Text style={styles.buttonStyle}>
-                Click Here
-              </Text>
-              </Button>
-              </Body>
+               </View>
+           </ImageBackground>
+         </View>
+         <Content style={{ backgroundColor: '#f8f6f6'}}>
+         </Content>
+         <ListView
+           dataSource={this.state.dataSource}
+           renderRow={(rowData) => {
+             const {uri} = rowData;
+             return (
+              <Content>
+                <Text style={{fontSize: 18, fontWeight: '800'}}></Text>
+                <Text style={{color: rowData.articleColor,fontSize: 10, fontWeight: '100', paddingLeft: 10, paddingRight: 5, }}>
+                  {rowData.articleType}
+                </Text>
+                <Text onPress={() => this.props.navigation.navigate("ArticleDetails", {rowData})} style={styles.nameStyle}>
+                    {rowData.articleName}
+                </Text>
+                <Text style={styles.dateStyle}>
+                    {rowData.postedOn}
+                </Text>
 
-          </CardItem>
-      </Card>
+              </Content>
+             )
+           }}
+         />
+         <Content>
+         <Card>
+
+             <Body>
+             <Text style={styles.Donate}> Make a Gift</Text>
+             <Text style={styles.Donatetext}> Please Click the Donate button to make an online donation.</Text>
+              <Text style={styles.Donatetext}>You will be redirected to a webpage</Text>
+             <View style = {styles.DonateButton}>
+             <Button rounded sucess onPress={ ()=>{ Linking.openURL('https://giving.utdallas.edu/')}} style = {styles.buttoncolor}>
+             <Text>
+               Donate Now
+             </Text>
+             </Button>
+             </View>
+             </Body>
+
+
+     </Card>
+
+         </Content>
          </Content>
        </Container>
-     );
+     )
    }
  }
 
  const styles = StyleSheet.create({
-  title: {
-    color: '#104E8B',
-    fontSize: 30
+   containerStyle: {
+       backgroundColor: '#FFFFFF',
+     },
+     container2: {
+       flex: 1,
+       justifyContent: 'flex-start',
+       alignItems: 'center',
+       width: null,
+       backgroundColor: '#FFFFFF'
+     },
+     backdrop: {
+       width: null,
+       height: 200
+     },
+     backdropView: {
+       height: 230,
+       width: 420,
+       backgroundColor: 'rgba(0,0,0,0)',
+       paddingLeft: 15,
+       alignItems: 'center',
+       justifyContent: 'center',
+     },
+     hostStyle: {
+       fontWeight: '800',
+       fontSize: 14,
+     },
+     seperator: {
+       fontWeight: '100',
+       color: '#D3D3D3',
+       paddingLeft: 10,
+     },
+     nameStyle: {
+       fontSize: 18,
+       fontWeight: '800',
+       paddingTop: 5,
+       paddingLeft: 15,
+       paddingRight: 5,
+     },
+     dateStyle: {
+       fontSize: 10,
+       fontWeight: '100',
+       paddingTop: 10,
+       paddingLeft: 15,
+       paddingRight: 5,
+       color: '#878787',
+     },
+     bigHeader: {
+       fontSize: 24,
+       fontWeight: '800',
+       paddingTop: 10,
+       paddingLeft: 15,
+     },
+     colorHeader: {
+       fontSize: 24,
+       fontWeight: '800',
+       paddingTop: 10,
+       paddingLeft: 15,
+       color: '#C75B12',
+     },
+     jonssonHeader: {
+       fontSize: 24,
+       fontWeight: '800',
+       paddingBottom: 20,
+       paddingLeft: 10,
+     },
+     eventDescriptionStyle: {
+       fontSize: 10,
+     },
+     typeStyle: {
+       fontSize: 14,
+       fontWeight: '800',
+       paddingTop: 10,
+       paddingLeft: 15,
+       paddingRight: 5,
+       color: '#0085c2',
+     },
+     summaryStyle: {
+       fontSize: 18,
+       fontWeight: '800',
+       paddingTop: 10,
+       paddingLeft: 15,
+       paddingRight: 5,
+     },
+     buttonStyle: {
+       fontSize: 12,
+     },
+     search: {
+       backgroundColor: '#FFFFFF',
+       borderWidth: 1,
+       borderRadius: 2,
+       borderColor: '#ddd',
+       borderBottomWidth: 0,
+       shadowColor: '#000',
+       shadowOffset: { width: 0, height: 2 },
+       shadowOpacity: 0.8,
+       shadowRadius: 2,
+       elevation: 1,
+     },
+     searchbarColor: {
+       backgroundColor: '#00A1DE',
+     },
+     searchButton: {
+       fontSize: 12,
+       color: '#ffffff',
+     },
+     textInput: {
+       height: 30,
+       backgroundColor: '#ffffff',
+       borderWidth: 1,
+       borderColor: '#FFFFFF',
+       marginBottom: 5,
+       marginVertical: 5,
+       marginHorizontal: 5,
+     },
+  Donate: {
+    fontSize: 22,
+    fontWeight: '800',
+    paddingTop: 10,
+    paddingBottom: 5,
+    paddingLeft: 5,
   },
-  searchbarColor: {
-    backgroundColor: '#008542',
+  Donatetext:{
+    alignItems:'center',
+     fontSize: 14,
+      fontWeight: '100',
+       paddingBottom: 5,
   },
-  searchButton: {
-    fontSize: 12,
-    color: '#ffffff',
+  DonateButton: {
+    alignItems:'center',
+    paddingTop: 10,
+    paddingBottom: 5,
   },
-  buttonStyle: {
-    fontSize: 12,
+  buttoncolor:{
+    backgroundColor:'#69BE28',
   },
-
 });
